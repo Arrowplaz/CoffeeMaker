@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Special Recipe</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <style>
+      html,
+      body {
+        margin:0
+      }
+      .banner {
+       background-color: rgb(111, 29, 27)
+      }
+      
+
+      .banner__content{
+        color:rgb(255, 230, 167);
+        padding: 15px;
+        max-width: 800px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+      }
+      .banner__text{
+        line-height: 1.4;
+        font-family: 'Quicksand', sans-serif;
+      }
+
+      .Recipe__name{
+        top: 19px;
+        width: 300px;
+      }
+
+      .Price{
+        top: 19px;
+        width:300px
+      }
+      
+      .Ingredients{
+        width: 300px;
+        top:19px
+      }
+
+      .Home__Button{
+        top:19px;
+        width:300px;
+
+      }
+
+      .controls{
+        top:19px;
+        width: 30px;
+      }
+
+      .Current_Recipe{
+        color: rgb(111, 29, 27)
+      }
+    </style>
+
+    <div layout:fragment="content">
+        <script src="https://tildesites.bowdoin.edu/~k.preslermarshall/AngularJS/angular.min.js"></script>
+        <script>
+            /* Without these comments, Thymeleaf will try to parse the Javascript as XML and break itself sometimes */
+            /*<![CDATA[*/ 
+            var app = angular.module('myApp', []);
+            app.controller('populateCtrl', function($scope, $http) {
+                $http.get("/api/v1/recipes").then(function(response){
+                        $scope.recipes = response.data;
+    
+                })
+                
+                
+                $scope.getIngredients = function() {
+                	const name = $scope.recipeName.name
+                	let recipe = null
+                	for(let i = 0; i < $scope.recipes.length; i++){
+                		if(name == $scope.recipes[i].name){
+                			recipe = $scope.recipes[i]
+                			break
+                		}
+                	}
+                	$scope.recipe = recipe
+                }
+                
+                $scope.addIngredient = function() { 
+                	const addingAmount = parseInt($scope.amount)
+                	if(isNaN(addingAmount) || addingAmount === 0){
+                		alert("Ingredient amount should be 1 or greater")
+                		return
+                	}
+                	const selectedIng = $scope.ingName.name
+                	for(let i = 0; i < $scope.recipe.ingredients.length; i++){
+                		if(selectedIng === $scope.recipe.ingredients[i].name && !isNaN(addingAmount)){
+                			$scope.recipe.ingredients[i].amount += addingAmount
+                		}
+                	}
+                	
+                }
+                
+                $scope.updateRecipe = function() {
+                	const name = $scope.recipe.name
+                	if(isNaN($scope.price) || $scope.price === 0){
+                		alert("Price must be at least 1")
+                		return
+                	}
+                	$scope.recipe.price = $scope.price
+                	$http.put("/api/v1/recipes/" + name, $scope.recipe).then(
+                	function(success){
+                		console.log("success")
+                		$scope.success = true;
+                		alert("Updated Successfully")
+                	},function(rejection){
+                		alert("Issue updating Recipe")
+                	})
+                }
+                
+            });
+            
+            /* Without these comments, Thymeleaf will try to parse the Javascript as XML and break itself sometimes */
+            /*]]>*/
+        </script>
+    
+
+  </head>
+  <body style="background-color: rgb(187, 148, 87);">
+    <div ng-app="myApp" ng-controller="populateCtrl">
+
+    <div class="banner">
+      <div class="banner__content">
+        <div class="banner__text">
+          <strong>Edit a Recipe!</strong>
+        </div>
+        <div class="banner__icons">
+          <i class="coffee__icon">
+            <span class="material-icons">
+              emoji_food_beverage
+              </span>
+          </i>
+        </div>
+      </div>
+    </div>
+
+    <div class="container text-center">
+      <div class="row 	">
+        <div class="col">
+         <form class="form-inline well">
+          <div class ="row gy">
+            <div class="col-sm">
+    			Chosen Recipe: <br />
+    			<select ng-model="recipeName" ng-change="getIngredients()" ng-options="recipe as recipe.name for recipe in recipes" required="true">
+        			<option disabled value="">Select Recipe to edit</option>
+   				</select>
+			</div>
+          </div>
+          <div>
+            <br>
+          </div>
+          <div class="row">
+          	<div class="col">
+          		<select ng-model="ingName" ng-change="" ng-options="ingredient as ingredient.name for ingredient in recipe.ingredients" required="true">
+        			<option disabled value="">Select Ingredient to edit</option>
+   				</select>
+          	</div>
+            <div class="col">
+            	
+              	<input type="number" ng-model="price" required="true" pattern="[0-9]+" id="amount" placeholder="Price: ">
+              	
+              	<input type="number" ng-model="amount" required="true" pattern="[0-9]+" id="amount" placeholder="Amount">
+            	
+            </div>
+          </div>
+          <div>
+            <br>
+          </div>
+          <div class="row">
+          	<div class="col">
+          		<div class = "controls">
+              		<input id="add" ng-click="addIngredient()" type="button" value="Add">
+            	</div>
+          	</div>
+          	
+          	<div class="col">
+          		<div class = "controls">
+              		<input id="submit" ng-click="updateRecipe()" type="submit" value="Submit">
+            	</div>
+          	</div>
+          
+            
+            
+          </div>
+          <div>
+            <br>
+          </div>
+          <div class="row">
+            <div class="row">
+              <button class="Home__Button" onclick="location.href='/index'" type="button"> Main Menu</button>
+            </div>
+          </div>
+         </form>
+        </div>
+        <div class="col Current_Recipe">
+          <label class="Current Inventory Header"> <b> Recipe Ingredients</b></label>
+          <p>Price: {{recipe.price}} </p>
+          <ul ng-repeat= "ingredient in recipe.ingredients"><li>{{ingredient.name}}: {{ingredient.amount}}</li></ul>
+        </div>
+      
+      </div>
+    </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+  </body>
+</html>
